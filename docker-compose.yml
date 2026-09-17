@@ -2,22 +2,25 @@ services:
     web:
         container_name: absolute-web
         image: nginx:latest
-        ports:
-            - 80:80
-            - 443:443
         volumes:
             - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-            - ./certbot/www:/var/www/certbot
-            - ./certbot/conf:/etc/nginx/ssl
             - ./app:/app
             - ./logs:/logs
             - chat-build:/app/js/chat
         depends_on:
             - mysql
+            - php
             - chat
         networks:
             - absolute
-
+            - proxy
+        labels:
+            - "traefik.enable=true"
+            - "traefik.docker.network=proxy"
+            - "traefik.http.routers.absolute.rule=Host(`pokemon.sauva.internal`)"
+            - "traefik.http.routers.absolute.entrypoints=web"
+            - "traefik.http.routers.absolute.service=absolute"
+            - "traefik.http.services.absolute.loadbalancer.server.port=80"
 
     mysql:
         container_name: absolute-mysql
@@ -32,13 +35,15 @@ services:
             - ./config/my.cnf:/etc/mysql/my.cnf
             - ./migrations/sql:/data/application/sql
             - ./migrations/migrate.sh:/data/application/migrate.sh
-            - ./logs/mysql_errors.log:/var/log/mysql/error.log
         command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-        ports:
-            - 3307:3306
+        healthcheck:
+            test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u$$MYSQL_ROOT_USER -p$$MYSQL_ROOT_PASSWORD --silent"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 20s
         networks:
             - absolute
-
 
     phpmyadmin:
         container_name: absolute-phpmyadmin
@@ -48,19 +53,10 @@ services:
             PMA_ABSOLUTE_URI: '/db/'
             UPLOAD_LIMIT: 512M
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
         networks:
             - absolute
-
-
-    certbot:
-        image: certbot/certbot:latest
-        volumes:
-            - ./certbot/www:/var/www/certbot
-            - ./certbot/conf:/etc/letsencrypt
-        networks:
-            - absolute
-
 
     php:
         container_name: absolute-php
@@ -79,24 +75,8 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         depends_on:
-            - mysql
-        networks:
-            - absolute
-
-
-    discord:
-        container_name: absolute-discord
-        restart: on-failure
-        init: true
-        build:
-            context: .
-            dockerfile: dockerfiles/discord.dockerfile
-        volumes:
-            - ./absolute/discord:/app/discord
-        ports:
-            - 3000:3000
-        depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
         networks:
             - absolute
 
@@ -107,15 +87,24 @@ services:
         build:
             context: .
             dockerfile: dockerfiles/chat.dockerfile
+        environment:
+            DATABASE_HOST: ${MYSQL_HOST}
+            DATABASE: ${MYSQL_GAME_DATABASE}
+            DATABASE_TABLE: ${MYSQL_GAME_DATABASE}
+            DATABASE_USER: ${MYSQL_USER}
+            DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+            BOT_NAME: Absolute
+            BOT_COLOR: "#4A618F"
+            BOT_LOG_CHANNEL: Absolute-Bot-Logs
+            BOT_DEPLOY_COMMANDS: "true"
+            CHAT_ALLOWED_ORIGIN: "http://pokemon.sauva.internal"
         volumes:
             - chat-build:/chat/build/client
-        ports:
-            - 8080:8080
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
         networks:
             - absolute
-
 
 volumes:
     absolute-mysqldata: {}
@@ -125,3 +114,6 @@ networks:
     absolute:
         name: absolute
         driver: bridge
+
+    proxy:
+        external: true

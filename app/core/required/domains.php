@@ -1,28 +1,30 @@
 <?php
   define("PATH_ROOT", dirname(__DIR__));
 
-  define("SERVER_ROOT",  $_SERVER['DOCUMENT_ROOT']);
+  define("SERVER_ROOT", $_SERVER['DOCUMENT_ROOT']);
   define("SERVER_SPRITES", $_SERVER['DOCUMENT_ROOT'] . "/images");
 
-  if ( $_SERVER['HTTP_HOST'] === 'localhost' )
+  $Host = $_SERVER['HTTP_HOST'] ?? 'pokemon.sauva.internal';
+
+  $Forwarded_Proto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+  $Forwarded_Proto = trim(explode(',', $Forwarded_Proto)[0]);
+
+  if ( $Forwarded_Proto === 'https' )
   {
-    define('LOCAL', true);
-    define("DOMAIN_ROOT", "https://localhost");
-    define("DOMAIN_SPRITES", "https://localhost/images");
+    $Scheme = 'https';
+  }
+  elseif ( $Forwarded_Proto === 'http' )
+  {
+    $Scheme = 'http';
   }
   else
   {
-    define('LOCAL', false);
-
-    if ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' )
-    {
-      define("DOMAIN_ROOT", "https://absoluterpg.com");
-      define("DOMAIN_SPRITES", "https://absoluterpg.com/images");
-    }
-    else
-    {
-      define("DOMAIN_ROOT", "http://absoluterpg.com");
-      define("DOMAIN_SPRITES", "http://absoluterpg.com/images");
-    }
+    $Scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'
+      ? 'https'
+      : 'http';
   }
 
+  define('LOCAL', $Host === 'localhost' || str_starts_with($Host, 'localhost:'));
+
+  define("DOMAIN_ROOT", $Scheme . "://" . $Host);
+  define("DOMAIN_SPRITES", DOMAIN_ROOT . "/images");

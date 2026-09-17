@@ -10,14 +10,8 @@
   // Deal with the $_SERVER const.
   if ( isset($_SERVER['HTTP_HOST']) && session_status() !== PHP_SESSION_ACTIVE )
   {
-    if ( $_SERVER['HTTP_HOST'] == "localhost" )
-    {
-      session_set_cookie_params(0, '/', 'localhost');
-    }
-    else
-    {
-      session_set_cookie_params(0, '/', 'absoluterpg.com');
-    }
+    // Keep the session cookie bound to the hostname serving Absolute.
+    session_set_cookie_params(0, '/');
   }
 
   // No cache.
@@ -102,9 +96,11 @@
 
   if ( !$Current_Page )
   {
-    $Current_Page['Name'] = 'Index';
-    $Current_Page['Maintenance'] = 'no';
-    $Current_Page['Logged_In'] = 'no';
+    $Current_Page = [
+      'Name' => 'Index',
+      'Maintenance' => 'no',
+      'Logged_In' => 'no',
+    ];
   }
 
   /**

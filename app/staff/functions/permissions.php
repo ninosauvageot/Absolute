@@ -28,12 +28,14 @@
     global $Current_Page, $PDO, $User_Data;
 
     if ( empty($Permission_Name) )
-      $Permission_Name = $Current_Page['Required_Permission'];
+      $Permission_Name = $Current_Page['Required_Permission'] ?? null;
 
-    if ( empty($Permission_Name) && $Current_Page['Staff_Only'] == 'No' )
+    $Staff_Only = $Current_Page['Staff_Only'] ?? 'No';
+
+    if ( empty($Permission_Name) && $Staff_Only == 'No' )
       return true;
 
-    if ( empty($Permission_Name) && $Current_Page['Staff_Only'] == 'Yes' )
+    if ( empty($Permission_Name) && $Staff_Only == 'Yes' )
       return false;
 
     try

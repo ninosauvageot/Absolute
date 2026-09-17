@@ -1,4 +1,4 @@
-FROM php:8.0-fpm
+FROM php:8.2.33-fpm-bookworm
 
 RUN docker-php-ext-install pdo pdo_mysql
 

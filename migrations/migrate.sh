@@ -24,24 +24,33 @@ start_time=$(date +%s%3N)
 echo "[INFO] Establishing database connection."
 mysql_cmd="mariadb -h $MYSQL_HOST -u $MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD"
 
-# Create the migrations database and the migration table if they do not exist
-if ! $mysql_cmd -e "USE $MYSQL_MIGRATION_DATABASE" 2>/dev/null; then
-  # Update user privileges.
-  $mysql_cmd -e "REVOKE ALL PRIVILEGES ON *.* FROM 'absolute'@'%';
-    REVOKE GRANT OPTION ON *.* FROM 'absolute'@'%';
-    GRANT SELECT, INSERT, UPDATE, DELETE, FILE ON *.* TO 'absolute'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
-    FLUSH PRIVILEGES;
-  "
+# Ensure the application user and databases exist.
+$mysql_cmd -e "
+  CREATE USER IF NOT EXISTS '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
+  ALTER USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
 
-  echo "[SUCCESS] Updated user privileges for user 'absolute'@'%'."
+  CREATE DATABASE IF NOT EXISTS \`$MYSQL_GAME_DATABASE\`
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
 
-  # Create game and migration databases/tables.
-  $mysql_cmd -e "CREATE DATABASE $MYSQL_GAME_DATABASE; CREATE DATABASE $MYSQL_MIGRATION_DATABASE; CREATE TABLE $MYSQL_MIGRATION_DATABASE.$MYSQL_MIGRATION_TABLE (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));"
+  CREATE DATABASE IF NOT EXISTS \`$MYSQL_MIGRATION_DATABASE\`
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
 
-  echo "[SUCCESS] Database $MYSQL_MIGRATION_DATABASE created with table $MYSQL_MIGRATION_TABLE."
-else
-  echo "[NOTICE] Database $MYSQL_MIGRATION_DATABASE already exists."
-fi
+  CREATE TABLE IF NOT EXISTS
+    \`$MYSQL_MIGRATION_DATABASE\`.\`$MYSQL_MIGRATION_TABLE\` (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+  GRANT SELECT, INSERT, UPDATE, DELETE
+    ON \`$MYSQL_GAME_DATABASE\`.* TO '$MYSQL_USER'@'%';
+
+  FLUSH PRIVILEGES;
+"
+
+echo "[SUCCESS] Database and application user initialization complete."
 
 # Get all *.sql files
 migrations_directory="/data/application/sql"

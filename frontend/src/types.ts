@@ -1,0 +1,12 @@
+export type Direction = 'up'|'down'|'left'|'right';
+export type Position = {map:string;x:number;y:number;facing:Direction};
+export type Move = {id:number;name:string;power:number;accuracy:number;maxPp:number;pp:number;type:string;category:string;priority:number};
+export type Pokemon = {id:number;dexId:number;altId:number;name:string;level:number;experience:number;nextLevel:number;levelFloor:number;hp:number;maxHp:number;types:string[];sprite:string;icon:string;moves:Move[];shiny:boolean};
+export type Battle = {id:string;wild:Pokemon;turn:number;outcome:'won'|'lost'|'caught'|'fled'|null;log:string[]};
+export type Player = {user:{id:number;name:string;avatar:string};position:Position;revision:number;team:Pokemon[];collection:Pokemon[];activeId:number|null;bag:{balls:number;potions:number};battle:Battle|null;seen:number[];caught:number[];visited:string[];collected:string[];steps:number;needsStarter:boolean};
+export type OtherPlayer={id:number;name:string;avatar:string;x:number;y:number;facing:Direction};
+export type WorldObject={id:string;kind:string;x:number;y:number;w?:number;h?:number;name?:string;label?:string;roof?:string;text?:string;action?:string;sprite?:string;item?:string;quantity?:number};
+export type Zone={id:string;name:string;subtitle:string;width:number;height:number;kind:string;tiles:number[][];objects:WorldObject[];portals:{x:number;y:number;to:string;tx:number;ty:number}[]};
+export type World={version:number;maps:Record<string,Zone>;starters:number[];start:{map:string;x:number;y:number}};
+export type Dialogue={name:string;text:string;starter:boolean};
+export type Result={csrf?:string;world?:World;starters?:Pokemon[];player?:Player|null;notice?:string|null;dialogue?:Dialogue|null;players?:OtherPlayer[];revision?:number};

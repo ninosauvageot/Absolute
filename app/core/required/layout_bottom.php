@@ -44,7 +44,7 @@
       if ( isset($_SESSION['Absolute']) )
       {
     ?>
-      <script type='text/javascript' src='<?= DOMAIN_ROOT; ?>/js/chat/client.js'></script>
+      <script type='text/javascript' src='<?= DOMAIN_ROOT; ?>/js/chat/client.js?v=20260917-1'></script>
       <script type='text/javascript'>
           /**
            * Set up the user object that the socket will send.

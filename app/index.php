@@ -9,6 +9,7 @@
 	<div class='head'>Index</div>
 	<div class='body'>
 		Welcome back to Absolute, <?= $User_Data['Username']; ?>.
+		<p><a class='button' href='/adventure/'>Reprendre l’aventure</a></p>
 	</div>
 </div>
 
@@ -40,6 +41,7 @@
 	<div class='body'>
 		<div class='nav'>
 			<div><a href='index.php' style='display: block;'>Home</a></div>
+			<div><a href='/adventure/' style='display: block;'>Adventure</a></div>
 			<div><a href='login.php' style='display: block;'>Login</a></div>
 			<div><a href='register.php' style='display: block;'>Register</a></div>
 			<div><a href='discord.php' style='display: block;'>Discord</a></div>
@@ -47,6 +49,12 @@
 
 		<div class='description' style='width: 70%;'>
 			The Pok&eacute;mon Absolute is home to <b><?= number_format($Count_Data['user_count']); ?></b> trainers and <b><?= number_format($Count_Data['pokemon_count']); ?></b> Pok&eacute;mon!
+		</div>
+
+		<div style='margin: 20px 0; padding: 16px; border: 1px solid #d9b66f; text-align: center;'>
+			<strong>Une nouvelle façon de jouer à Absolute</strong><br />
+			Explorez une région connectée, rencontrez des Pokémon sauvages et construisez votre équipe au fil des chemins.<br />
+			<a href='/adventure/' style='display: inline-block; margin-top: 12px; padding: 10px 18px;'>Commencer l’exploration</a>
 		</div>
 
     <div>
